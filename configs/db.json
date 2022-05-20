@@ -1,0 +1,7 @@
+{
+  "user": "postgres",
+  "password": "1506",
+  "host": "localhost",
+  "database": "textmy",
+  "port": 5432
+}
