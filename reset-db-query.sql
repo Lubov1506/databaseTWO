@@ -343,3 +343,19 @@ SELECT *
 FROM orders
 WHERE user_id = 101;
 
+--Достать все заказы, где есть IPhone
+
+SELECT otp.order_id AS "Order Number", p.model, p.brand
+FROM orders_to_phones AS otp
+JOIN phones AS p
+ON otp.phone_id=p.id
+WHERE p.brand ILIKE 'iphone' AND p.model ILIKE '5%';
+
+--Посчитать, сколько заказов
+SELECT count(*), p.model
+FROM orders_to_phones AS otp
+JOIN phones AS p
+ON otp.phone_id=p.id
+WHERE p.brand ILIKE 'iphone' AND p.model ILIKE '5%'
+GROUP BY p.model;
+
