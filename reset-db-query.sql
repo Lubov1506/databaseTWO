@@ -359,3 +359,175 @@ ON otp.phone_id=p.id
 WHERE p.brand ILIKE 'iphone' AND p.model ILIKE '5%'
 GROUP BY p.model;
 
+--1 Извлечь все купленные телефоны (бренд+модель) конкретного заказа
+SELECT p.brand, p.model
+FROM orders_to_phones AS otp
+JOIN phones AS p
+ON otp.phone_id=p.id
+WHERE otp.order_id = 100;
+
+--2 Количество позиций в определенном заказе
+SELECT order_id AS "Номер заказа", sum(quantity) AS "Количество позиций"
+FROM orders_to_phones
+GROUP BY order_id
+ORDER BY order_id;
+--3 Найти самый популярный телефон
+SELECT p.*, sum(otp.quantity) AS "Продано"
+FROM orders_to_phones AS otp
+JOIN phones AS p
+ON otp.phone_id=p.id
+GROUP BY p.id
+ORDER BY sum(otp.quantity) desc
+LIMIT 1;
+
+--4 Вытащить всех пользователей и кол-во купленных ими моделей телефона
+SELECT u.*, count(*)
+FROM users AS u
+JOIN orders AS o
+ON u.id=o.id
+JOIN orders_to_phones AS otp
+ON o.id=otp.order_id
+GROUP BY otp.order_id, u.id
+ORDER BY u.*;
+
+SELECT * FROM users
+ORDER BY id;
+
+--5 Средний чек по всем заказам
+SELECT avg("sum") AS "Средний чек"  
+FROM
+    (SELECT sum(otp.quantity*p.price) AS "sum"
+    FROM orders_to_phones AS otp
+    JOIN phones AS p
+    ON otp.phone_id=p.id
+    GROUP BY otp.order_id) AS "Sum orders check"
+;
+
+
+
+--6 Извлечь все заказы, стоимостью выше среднего чека в магазине
+
+SELECT "owc".* FROM 
+    (SELECT otp.order_id, sum(otp.quantity*p.price) AS "cost"
+    FROM orders_to_phones AS otp
+    JOIN phones AS p
+    ON otp.phone_id=p.id
+    GROUP BY otp.order_id) AS "owc"
+    WHERE "owc"."cost" > (
+    SELECT avg("cost") AS "Средний чек"  
+    FROM
+    (SELECT sum(otp.quantity*p.price) AS "cost"
+    FROM orders_to_phones AS otp
+    JOIN phones AS p
+    ON otp.phone_id=p.id
+    GROUP BY otp.order_id) AS "owc"
+); 
+
+
+SELECT 
+FROM
+;
+
+
+
+SELECT "owq".* FROM 
+    (SELECT u.*, count(*) AS "qo"
+    FROM users AS u
+    JOIN orders AS o
+    ON u.id=o.user_id
+    JOIN orders_to_phones AS otp
+    ON o.id=otp.order_id
+    GROUP BY otp.order_id, u.id
+    ORDER BY u.id )
+    AS "owq"
+    WHERE "owq"."qo" > (
+    SELECT avg("qo") FROM
+        (SELECT count(*) AS "qo"
+        FROM users AS u
+        JOIN orders AS o
+        ON u.id=o.user_id
+        JOIN orders_to_phones AS otp
+        ON o.id=otp.order_id
+        GROUP BY otp.order_id, u.id
+        ORDER BY otp.order_id) AS "owq"
+);
+
+--рефактор
+
+WITH "orders_with_costs" AS (
+    SELECT otp.order_id, sum(otp.quantity*p.price) AS "cost"
+    FROM orders_to_phones AS otp
+    JOIN phones AS p
+    ON otp.phone_id=p.id
+    GROUP BY otp.order_id
+)
+SELECT "owc".*
+FROM "orders_with_costs" AS "owc"
+WHERE "owc"."cost" > (
+    SELECT avg("owc"."cost")
+    FROM "orders_with_costs" AS "owc"
+);
+
+--7 Извлечь пользователей, у которых кол-во заказов выше среднего
+
+SELECT "owq".* FROM
+(SELECT count(o.*) AS "qo", u.*
+FROM users AS u
+JOIN orders AS o
+ON u.id=o.user_id
+GROUP BY u.id
+ORDER BY u.id) AS "owq"
+WHERE "owq"."qo"> (
+    SELECT avg("qo") FROM
+    (SELECT count(o.*) AS "qo"
+    FROM users AS u
+    JOIN orders AS o
+    ON u.id=o.user_id
+    GROUP BY o.user_id
+    ORDER BY o.user_id) AS "owq");
+
+--рефактор
+
+WITH "order_with_quantity" AS (
+    SELECT count(o.*) AS "qo", u.*
+    FROM users AS u
+    JOIN orders AS o
+    ON u.id=o.user_id
+    GROUP BY u.id
+    ORDER BY u.id)
+SELECT "owq".*
+FROM "order_with_quantity" AS "owq"
+WHERE "owq"."qo" > (
+    SELECT avg("owq"."qo")
+    FROM "order_with_quantity" AS "owq"
+);
+
+--7.1 Извлечь пользователей, у которых кол-во телефонов в заказе выше среднего
+
+(
+SELECT  sum(otp.quantity) AS "qo" 
+FROM users AS u
+JOIN orders AS o
+ON u.id=o.user_id
+JOIN orders_to_phones AS otp
+ON o.id=otp.order_id
+GROUP BY otp.order_id
+ORDER BY otp.order_id;
+) AS "owq";
+
+SELECT avg("qo") FROM
+(
+SELECT  sum(otp.quantity) AS "qo" 
+FROM users AS u
+JOIN orders AS o
+ON u.id=o.user_id
+JOIN orders_to_phones AS otp
+ON o.id=otp.order_id
+GROUP BY otp.order_id
+ORDER BY otp.order_id
+) AS "owq";
+SELECT sum(quantity)
+FROM orders_to_phones
+WHERE order_id=2
+GROUP BY order_id
+ORDER BY order_id;
